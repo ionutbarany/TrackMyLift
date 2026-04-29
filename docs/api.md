@@ -15,6 +15,41 @@ Todos los endpoints devuelven siempre este formato:
 
 ---
 
+## Rutinas populares
+
+### `GET /api/v1/routines/popular`
+
+Devuelve una lista de rutinas predefinidas para explorar ideas de entrenamiento.
+
+**Respuesta 200**
+
+```json
+{
+  "data": [
+    {
+      "id": "popular-ppl-push",
+      "name": "PPL - Push",
+      "description": "Pecho, hombro y triceps en una sesion de empuje.",
+      "isPublic": true,
+      "createdAt": "2026-01-10T00:00:00.000Z",
+      "exercises": [
+        {
+          "id": "push-1",
+          "name": "Bench Press",
+          "muscleGroup": "chest",
+          "sets": 4,
+          "reps": 8,
+          "weight": 60
+        }
+      ]
+    }
+  ],
+  "message": "Rutinas populares recuperadas correctamente"
+}
+```
+
+---
+
 ## Sesiones
 
 ### `GET /api/v1/sessions`

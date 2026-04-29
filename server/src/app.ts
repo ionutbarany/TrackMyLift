@@ -1,6 +1,7 @@
 import cors from 'cors'
 import express, { type NextFunction, type Request, type Response } from 'express'
 import progressRouter from './routes/progress.routes'
+import routinesRouter from './routes/routines.routes'
 import sessionsRouter from './routes/sessions.routes'
 
 const app = express()
@@ -21,6 +22,7 @@ app.get('/health', (_req, res) => {
 
 app.use('/api/v1/sessions', sessionsRouter)
 app.use('/api/v1/progress', progressRouter)
+app.use('/api/v1/routines', routinesRouter)
 
 app.use((_req, res) => {
   return res.status(404).json({
@@ -30,6 +32,7 @@ app.use((_req, res) => {
 })
 
 app.use((err: unknown, _req: Request, res: Response, _next: NextFunction) => {
+  void _next
   console.error(err)
 
   return res.status(500).json({

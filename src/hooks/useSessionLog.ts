@@ -1,4 +1,8 @@
 import { useCallback, useState } from 'react'
+import {
+  createSession as createSessionRequest,
+  deleteSessionById,
+} from '../api/client'
 import type { LoadingState, Session } from '../types'
 
 export interface UseSessionLogResult {
@@ -6,21 +10,51 @@ export interface UseSessionLogResult {
   logSession: (session: Omit<Session, 'id'>) => Promise<void>
   deleteSession: (id: string) => Promise<void>
   state: LoadingState
+  errorMessage: string | null
 }
 
 export function useSessionLog(): UseSessionLogResult {
-  const [sessions] = useState<Session[]>([])
-  const [state] = useState<LoadingState>('idle')
+  const [sessions, setSessions] = useState<Session[]>([])
+  const [state, setState] = useState<LoadingState>('idle')
+  const [errorMessage, setErrorMessage] = useState<string | null>(null)
 
   const logSession = useCallback(async (session: Omit<Session, 'id'>) => {
-    void session
-    // Implementación con fetch en src/api/ en un bloque posterior.
+    try {
+      setState('loading')
+      setErrorMessage(null)
+      const createdSession = await createSessionRequest(session)
+      setSessions((prev) =>
+        [createdSession, ...prev].sort(
+          (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime(),
+        ),
+      )
+      setState('success')
+    } catch (error) {
+      setState('error')
+      setErrorMessage(
+        error instanceof Error
+          ? error.message
+          : 'No se pudo registrar la sesión',
+      )
+      throw error
+    }
   }, [])
 
   const deleteSession = useCallback(async (id: string) => {
-    void id
-    // Implementación con fetch en src/api/ en un bloque posterior.
+    try {
+      setState('loading')
+      setErrorMessage(null)
+      await deleteSessionById(id)
+      setSessions((prev) => prev.filter((session) => session.id !== id))
+      setState('success')
+    } catch (error) {
+      setState('error')
+      setErrorMessage(
+        error instanceof Error ? error.message : 'No se pudo eliminar la sesión',
+      )
+      throw error
+    }
   }, [])
 
-  return { sessions, logSession, deleteSession, state }
+  return { sessions, logSession, deleteSession, state, errorMessage }
 }
