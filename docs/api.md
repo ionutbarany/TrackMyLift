@@ -136,6 +136,99 @@ Elimina una sesión por ID.
 }
 ```
 
+### `PUT /api/v1/sessions/:id`
+
+Reemplaza completamente una sesión existente por ID.
+
+**Body requerido**
+
+```json
+{
+  "routineId": "routine_pull",
+  "routineName": "Pull Day",
+  "date": "2026-04-30T19:00:00.000Z",
+  "notes": "Sesión actualizada completa"
+}
+```
+
+**Respuesta 200**
+
+```json
+{
+  "data": {
+    "id": "session_generated_id",
+    "routineId": "routine_pull",
+    "routineName": "Pull Day",
+    "date": "2026-04-30T19:00:00.000Z",
+    "notes": "Sesión actualizada completa"
+  },
+  "message": "Sesión actualizada correctamente"
+}
+```
+
+**Respuesta 400 (ejemplo)**
+
+```json
+{
+  "data": null,
+  "message": "routineName es obligatorio"
+}
+```
+
+**Respuesta 404**
+
+```json
+{
+  "data": null,
+  "message": "Sesión no encontrada"
+}
+```
+
+### `PATCH /api/v1/sessions/:id`
+
+Actualiza parcialmente una sesión existente por ID.
+
+**Body ejemplo**
+
+```json
+{
+  "notes": "Subí 2.5kg en el press"
+}
+```
+
+**Respuesta 200**
+
+```json
+{
+  "data": {
+    "id": "session_generated_id",
+    "routineId": "routine_push",
+    "routineName": "Push Day",
+    "date": "2026-04-29T16:00:00.000Z",
+    "notes": "Subí 2.5kg en el press"
+  },
+  "message": "Sesión actualizada parcialmente"
+}
+```
+
+**Respuesta 400 (ejemplo)**
+
+```json
+{
+  "data": null,
+  "message": "Debes enviar al menos un campo para actualizar"
+}
+```
+
+**Respuesta 404**
+
+```json
+{
+  "data": null,
+  "message": "Sesión no encontrada"
+}
+```
+
 ---
 
 ## Progreso
