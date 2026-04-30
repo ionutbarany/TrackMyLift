@@ -20,7 +20,21 @@ export interface CreateSessionInput {
   notes?: string
 }
 
+export interface UpdateSessionInput {
+  routineId: string
+  routineName: string
+  date: string
+  notes?: string
+}
+
 export interface CreateProgressInput {
+  exerciseName: string
+  weight: number
+  reps: number
+  date: string
+}
+
+export interface UpdateProgressInput {
   exerciseName: string
   weight: number
   reps: number
@@ -75,11 +89,25 @@ export function deleteSessionById(id: string): Promise<{ id: string }> {
   })
 }
 
+export function updateSessionById(
+  id: string,
+  input: UpdateSessionInput,
+): Promise<Session> {
+  return request<Session>(`/api/v1/sessions/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify(input),
+  })
+}
+
 export function fetchProgressByExercise(
   exerciseName: string,
 ): Promise<ProgressEntry[]> {
   const encodedExercise = encodeURIComponent(exerciseName.trim())
   return request<ProgressEntry[]>(`/api/v1/progress/${encodedExercise}`)
+}
+
+export function fetchAllProgressEntries(): Promise<ProgressEntry[]> {
+  return request<ProgressEntry[]>('/api/v1/progress')
 }
 
 export function createProgressEntry(
@@ -88,5 +116,21 @@ export function createProgressEntry(
   return request<ProgressEntry>('/api/v1/progress', {
     method: 'POST',
     body: JSON.stringify(input),
+  })
+}
+
+export function updateProgressEntryById(
+  id: string,
+  input: UpdateProgressInput,
+): Promise<ProgressEntry> {
+  return request<ProgressEntry>(`/api/v1/progress/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify(input),
+  })
+}
+
+export function deleteProgressEntryById(id: string): Promise<{ id: string }> {
+  return request<{ id: string }>(`/api/v1/progress/${id}`, {
+    method: 'DELETE',
   })
 }

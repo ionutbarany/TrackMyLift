@@ -1,3 +1,7 @@
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
+import path from 'node:path'
+import { fileURLToPath } from 'node:url'
+
 export interface Session {
   id: string
   routineId: string
@@ -22,7 +26,57 @@ export interface PatchSessionInput {
   notes?: unknown
 }
 
-const sessionsStore: Session[] = []
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = path.dirname(__filename)
+const dataDirectory = path.resolve(__dirname, '../../data')
+const sessionsDataFile = path.resolve(dataDirectory, 'sessions.json')
+
+function ensureDataDirectory(): void {
+  if (!existsSync(dataDirectory)) {
+    mkdirSync(dataDirectory, { recursive: true })
+  }
+}
+
+function loadSessionsStore(): Session[] {
+  try {
+    ensureDataDirectory()
+
+    if (!existsSync(sessionsDataFile)) {
+      return []
+    }
+
+    const raw = readFileSync(sessionsDataFile, 'utf8')
+    const parsed = JSON.parse(raw) as unknown
+    if (!Array.isArray(parsed)) {
+      return []
+    }
+
+    return parsed.filter((item): item is Session => {
+      if (typeof item !== 'object' || item === null) return false
+      const candidate = item as Partial<Session>
+      return (
+        typeof candidate.id === 'string' &&
+        typeof candidate.routineId === 'string' &&
+        typeof candidate.routineName === 'string' &&
+        typeof candidate.date === 'string' &&
+        (candidate.notes === undefined || typeof candidate.notes === 'string')
+      )
+    })
+  } catch {
+    return []
+  }
+}
+
+function persistSessionsStore(store: Session[]): void {
+  try {
+    ensureDataDirectory()
+    writeFileSync(sessionsDataFile, JSON.stringify(store, null, 2), 'utf8')
+  } catch {
+    // Evitamos romper la API por errores de escritura.
+  }
+}
+
+const sessionsStore: Session[] = loadSessionsStore()
 
 function isValidIsoDate(value: string): boolean {
   return !Number.isNaN(Date.parse(value))
@@ -135,6 +189,7 @@ export function createSession(
   }
 
   sessionsStore.push(session)
+  persistSessionsStore(sessionsStore)
   return { session }
 }
 
@@ -165,6 +220,7 @@ export function replaceSessionById(
   }
 
   sessionsStore[index] = updatedSession
+  persistSessionsStore(sessionsStore)
   return { session: updatedSession }
 }
 
@@ -196,6 +252,7 @@ export function patchSessionById(
   }
 
   sessionsStore[index] = patchedSession
+  persistSessionsStore(sessionsStore)
   return { session: patchedSession }
 }
 
@@ -206,5 +263,6 @@ export function removeSessionById(id: string): boolean {
   }
 
   sessionsStore.splice(index, 1)
+  persistSessionsStore(sessionsStore)
   return true
 }

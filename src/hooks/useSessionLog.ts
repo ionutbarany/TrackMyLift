@@ -2,12 +2,16 @@ import { useCallback, useState } from 'react'
 import {
   createSession as createSessionRequest,
   deleteSessionById,
+  fetchSessions,
+  updateSessionById,
 } from '../api/client'
 import type { LoadingState, Session } from '../types'
 
 export interface UseSessionLogResult {
   sessions: Session[]
   logSession: (session: Omit<Session, 'id'>) => Promise<void>
+  getAllSessions: () => Promise<void>
+  updateSession: (id: string, session: Omit<Session, 'id'>) => Promise<void>
   deleteSession: (id: string) => Promise<void>
   state: LoadingState
   errorMessage: string | null
@@ -40,6 +44,49 @@ export function useSessionLog(): UseSessionLogResult {
     }
   }, [])
 
+  const getAllSessions = useCallback(async () => {
+    try {
+      setState('loading')
+      setErrorMessage(null)
+      const data = await fetchSessions()
+      setSessions(data)
+      setState('success')
+    } catch (error) {
+      setState('error')
+      setErrorMessage(
+        error instanceof Error
+          ? error.message
+          : 'No se pudieron cargar las sesiones',
+      )
+      throw error
+    }
+  }, [])
+
+  const updateSession = useCallback(
+    async (id: string, session: Omit<Session, 'id'>) => {
+      try {
+        setState('loading')
+        setErrorMessage(null)
+        const updatedSession = await updateSessionById(id, session)
+        setSessions((prev) =>
+          prev
+            .map((item) => (item.id === id ? updatedSession : item))
+            .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()),
+        )
+        setState('success')
+      } catch (error) {
+        setState('error')
+        setErrorMessage(
+          error instanceof Error
+            ? error.message
+            : 'No se pudo actualizar la sesión',
+        )
+        throw error
+      }
+    },
+    [],
+  )
+
   const deleteSession = useCallback(async (id: string) => {
     try {
       setState('loading')
@@ -56,5 +103,13 @@ export function useSessionLog(): UseSessionLogResult {
     }
   }, [])
 
-  return { sessions, logSession, deleteSession, state, errorMessage }
+  return {
+    sessions,
+    logSession,
+    getAllSessions,
+    updateSession,
+    deleteSession,
+    state,
+    errorMessage,
+  }
 }

@@ -32,27 +32,26 @@ export function useRoutines(): UseRoutinesResult {
   const [routines, setRoutines] = useState<Routine[]>(() => readStoredRoutines())
 
   const addRoutine = useCallback((routine: Routine) => {
-    setRoutines((prev) => {
-      const nextRoutines = [...prev, routine]
-      writeStoredRoutines(nextRoutines)
-      return nextRoutines
-    })
+    const currentRoutines = readStoredRoutines()
+    const nextRoutines = [...currentRoutines, routine]
+    writeStoredRoutines(nextRoutines)
+    setRoutines(nextRoutines)
   }, [])
 
   const updateRoutine = useCallback((routine: Routine) => {
-    setRoutines((prev) => {
-      const nextRoutines = prev.map((r) => (r.id === routine.id ? routine : r))
-      writeStoredRoutines(nextRoutines)
-      return nextRoutines
-    })
+    const currentRoutines = readStoredRoutines()
+    const nextRoutines = currentRoutines.map((r) =>
+      r.id === routine.id ? routine : r,
+    )
+    writeStoredRoutines(nextRoutines)
+    setRoutines(nextRoutines)
   }, [])
 
   const deleteRoutine = useCallback((id: string) => {
-    setRoutines((prev) => {
-      const nextRoutines = prev.filter((r) => r.id !== id)
-      writeStoredRoutines(nextRoutines)
-      return nextRoutines
-    })
+    const currentRoutines = readStoredRoutines()
+    const nextRoutines = currentRoutines.filter((r) => r.id !== id)
+    writeStoredRoutines(nextRoutines)
+    setRoutines(nextRoutines)
   }, [])
 
   return { routines, addRoutine, updateRoutine, deleteRoutine }
