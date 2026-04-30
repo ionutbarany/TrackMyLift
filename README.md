@@ -20,8 +20,11 @@ Aplicación web para organizar rutinas de gimnasio, registrar sesiones y seguir 
 
 Crea un fichero `.env` en la raíz del proyecto según necesites:
 
-- `VITE_API_URL` — URL base de la API Express (por defecto se usa `http://localhost:3001`).
-- `VITE_RAPIDAPI_KEY` — clave de RapidAPI para el catálogo ExerciseDB.
+- `VITE_API_URL` — URL base de la API (si no se define, usa el mismo dominio en producción y `http://localhost:3001` en local).
+
+## Variables de entorno (backend)
+
+- `RAPIDAPI_KEY` — clave privada para consultar ExerciseDB desde el servidor (no se expone al navegador).
 
 ## Documentación
 
