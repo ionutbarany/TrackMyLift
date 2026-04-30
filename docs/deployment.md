@@ -14,13 +14,18 @@ Publicar frontend y backend para poder usar la aplicación fuera de entorno loca
 Variables usadas por el frontend:
 
 - `VITE_API_URL`: URL pública de la API.
-- `VITE_RAPIDAPI_KEY`: clave de RapidAPI para ExerciseDB.
+
+Variables usadas por el backend/API:
+
+- `RAPIDAPI_KEY`: clave privada de RapidAPI para consultar ExerciseDB desde el servidor.
 
 ## Pasos de despliegue (resumen)
 
 1. Conectar el repositorio de GitHub en Vercel.
 2. Configurar proyecto frontend con build de Vite.
-3. Configurar variables de entorno en Vercel.
+3. Configurar variables de entorno en Vercel:
+   - `RAPIDAPI_KEY` (obligatoria para búsqueda de ejercicios).
+   - `VITE_API_URL` solo si frontend y API van en dominios distintos.
 4. Desplegar y validar que el frontend carga correctamente.
 5. Verificar conectividad frontend -> API con operaciones reales (sesiones/progreso).
 

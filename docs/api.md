@@ -1,6 +1,6 @@
 # API de FitTrack (Express)
 
-Este documento describe los endpoints implementados en el backend de FitTrack para sesiones y progreso.
+Este documento describe los endpoints implementados en el backend de FitTrack.
 
 ## Convención de respuesta
 
@@ -297,6 +297,42 @@ Crea un nuevo registro de progreso.
 {
   "data": null,
   "message": "reps debe ser un número válido mayor o igual a 1"
+}
+```
+
+---
+
+## Ejercicios (catálogo)
+
+### `GET /api/v1/exercises/search?q=:query`
+
+Busca ejercicios por nombre usando ExerciseDB a través del backend.
+
+> Requiere `RAPIDAPI_KEY` configurada en el entorno del servidor.
+
+**Respuesta 200**
+
+```json
+{
+  "data": [
+    {
+      "externalId": "0001",
+      "name": "Bench Press",
+      "muscleGroup": "chest",
+      "target": "pectorals",
+      "bodyPart": "chest"
+    }
+  ],
+  "message": "Ejercicios para \"bench\" recuperados correctamente"
+}
+```
+
+**Respuesta 500 (ejemplo)**
+
+```json
+{
+  "data": null,
+  "message": "Falta RAPIDAPI_KEY en el entorno del servidor"
 }
 ```
 

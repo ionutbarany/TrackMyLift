@@ -1,5 +1,6 @@
 import cors from 'cors'
 import express, { type NextFunction, type Request, type Response } from 'express'
+import exercisesRouter from './routes/exercises.routes'
 import progressRouter from './routes/progress.routes'
 import routinesRouter from './routes/routines.routes'
 import sessionsRouter from './routes/sessions.routes'
@@ -8,7 +9,7 @@ const app = express()
 
 app.use(
   cors({
-    origin: ['http://localhost:5173', 'http://127.0.0.1:5173'],
+    origin: true,
   }),
 )
 app.use(express.json())
@@ -23,6 +24,7 @@ app.get('/health', (_req, res) => {
 app.use('/api/v1/sessions', sessionsRouter)
 app.use('/api/v1/progress', progressRouter)
 app.use('/api/v1/routines', routinesRouter)
+app.use('/api/v1/exercises', exercisesRouter)
 
 app.use((_req, res) => {
   return res.status(404).json({

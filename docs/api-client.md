@@ -9,7 +9,9 @@ Cliente HTTP hacia la API propia (Express).
 ### Base URL
 
 - Usa `VITE_API_URL` si existe.
-- Si no existe, usa `http://localhost:3001`.
+- Si no existe:
+  - en local usa `http://localhost:3001`,
+  - en producción usa el mismo dominio de la app.
 
 ### Endpoints integrados
 
@@ -27,14 +29,15 @@ Cliente HTTP hacia la API propia (Express).
 
 ## `src/api/exerciseApi.ts`
 
-Cliente para la API externa ExerciseDB (RapidAPI).
+Cliente frontend para el endpoint interno de búsqueda de ejercicios.
 
 ### Configuración
 
-- Lee `VITE_RAPIDAPI_KEY` desde variables de entorno.
+- No usa ninguna API key en cliente.
+- El frontend llama al backend: `GET /api/v1/exercises/search?q=...`.
+- El backend se encarga de consultar RapidAPI con `RAPIDAPI_KEY` privada.
 
 ### Funciones implementadas
 
-- `searchExercises(query)` -> consulta `GET /exercises/name/:query` en ExerciseDB.
-- Mapea la respuesta externa al modelo interno `ExerciseCatalogItem`.
-- Normaliza grupo muscular al tipo `MuscleGroup` del proyecto.
+- `searchExercises(query)` -> consulta `GET /api/v1/exercises/search?q=...`.
+- Devuelve resultados ya normalizados al modelo `ExerciseCatalogItem`.

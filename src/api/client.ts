@@ -1,7 +1,17 @@
 import type { ApiResponse, ProgressEntry, Routine, Session } from '../types'
 
-const API_BASE =
-  import.meta.env.VITE_API_URL?.replace(/\/$/, '') ?? 'http://localhost:3001'
+function resolveApiBase(): string {
+  const envBase = import.meta.env.VITE_API_URL?.replace(/\/$/, '')
+  if (envBase) return envBase
+
+  if (typeof window !== 'undefined' && window.location?.origin) {
+    return window.location.origin
+  }
+
+  return 'http://localhost:3001'
+}
+
+const API_BASE = resolveApiBase()
 
 export interface CreateSessionInput {
   routineId: string
