@@ -1,14 +1,33 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useProgress } from '../hooks/useProgress'
+import type { ProgressEntry } from '../types'
 
 export default function Progress() {
-  const { entries, addEntry, getByExercise, state, errorMessage } = useProgress()
+  const {
+    entries,
+    addEntry,
+    getAllEntries,
+    getByExercise,
+    updateEntry,
+    deleteEntry,
+    state,
+    errorMessage,
+  } = useProgress()
   const [searchExercise, setSearchExercise] = useState('')
   const [exerciseName, setExerciseName] = useState('')
   const [weight, setWeight] = useState('')
   const [reps, setReps] = useState('')
   const [date, setDate] = useState('')
   const [successMessage, setSuccessMessage] = useState('')
+  const [editingEntryId, setEditingEntryId] = useState<string | null>(null)
+  const [editingExerciseName, setEditingExerciseName] = useState('')
+  const [editingWeight, setEditingWeight] = useState('')
+  const [editingReps, setEditingReps] = useState('')
+  const [editingDate, setEditingDate] = useState('')
+
+  useEffect(() => {
+    void getAllEntries()
+  }, [getAllEntries])
 
   const emptyStateMessage = useMemo(() => {
     if (state === 'loading') return 'Cargando historial...'
@@ -34,7 +53,53 @@ export default function Progress() {
     })
 
     setSuccessMessage('Progreso guardado correctamente')
-    await getByExercise(exerciseName.trim())
+    setExerciseName('')
+    setWeight('')
+    setReps('')
+    setDate('')
+    await getAllEntries()
+  }
+
+  function toDatetimeLocalValue(isoString: string): string {
+    const dateValue = new Date(isoString)
+    const timezoneOffset = dateValue.getTimezoneOffset() * 60000
+    return new Date(dateValue.getTime() - timezoneOffset).toISOString().slice(0, 16)
+  }
+
+  function startEditing(entry: ProgressEntry): void {
+    setEditingEntryId(entry.id)
+    setEditingExerciseName(entry.exerciseName)
+    setEditingWeight(String(entry.weight))
+    setEditingReps(String(entry.reps))
+    setEditingDate(toDatetimeLocalValue(entry.date))
+    setSuccessMessage('')
+  }
+
+  function cancelEditing(): void {
+    setEditingEntryId(null)
+    setEditingExerciseName('')
+    setEditingWeight('')
+    setEditingReps('')
+    setEditingDate('')
+  }
+
+  async function handleSaveEdit(entryId: string): Promise<void> {
+    await updateEntry(entryId, {
+      exerciseName: editingExerciseName.trim(),
+      weight: Number(editingWeight),
+      reps: Number(editingReps),
+      date: new Date(editingDate).toISOString(),
+    })
+    setSuccessMessage('Registro actualizado correctamente')
+    cancelEditing()
+  }
+
+  async function handleDeleteEntry(entryId: string): Promise<void> {
+    await deleteEntry(entryId)
+    setSuccessMessage('Registro eliminado correctamente')
+    if (editingEntryId === entryId) {
+      cancelEditing()
+    }
   }
 
   return (
@@ -133,13 +198,95 @@ export default function Progress() {
                 key={entry.id}
                 className="rounded-md border border-gym-border bg-gym-bg px-3 py-2 text-sm"
               >
-                <p className="font-medium text-white">{entry.exerciseName}</p>
-                <p className="text-gym-muted">
-                  {entry.weight} kg x {entry.reps} reps
-                </p>
-                <p className="text-xs text-gym-muted">
-                  {new Date(entry.date).toLocaleString()}
-                </p>
+                {editingEntryId === entry.id ? (
+                  <div className="space-y-2">
+                    <input
+                      value={editingExerciseName}
+                      onChange={(event) => setEditingExerciseName(event.target.value)}
+                      className="w-full rounded-md border border-gym-border bg-gym-surface px-3 py-2 text-white outline-none focus:border-gym-accent"
+                      placeholder="Exercise name"
+                      required
+                    />
+                    <div className="grid grid-cols-2 gap-2">
+                      <input
+                        type="number"
+                        min={0}
+                        step="0.5"
+                        value={editingWeight}
+                        onChange={(event) => setEditingWeight(event.target.value)}
+                        className="rounded-md border border-gym-border bg-gym-surface px-3 py-2 text-white outline-none focus:border-gym-accent"
+                        placeholder="Weight (kg)"
+                        required
+                      />
+                      <input
+                        type="number"
+                        min={1}
+                        value={editingReps}
+                        onChange={(event) => setEditingReps(event.target.value)}
+                        className="rounded-md border border-gym-border bg-gym-surface px-3 py-2 text-white outline-none focus:border-gym-accent"
+                        placeholder="Reps"
+                        required
+                      />
+                    </div>
+                    <input
+                      type="datetime-local"
+                      value={editingDate}
+                      onChange={(event) => setEditingDate(event.target.value)}
+                      className="w-full rounded-md border border-gym-border bg-gym-surface px-3 py-2 text-white outline-none focus:border-gym-accent"
+                      required
+                    />
+                    <div className="flex flex-wrap gap-2">
+                      <button
+                        type="button"
+                        disabled={state === 'loading'}
+                        onClick={() => {
+                          void handleSaveEdit(entry.id)
+                        }}
+                        className="rounded-md bg-gym-accent px-3 py-1 text-xs font-medium text-gym-bg disabled:opacity-60"
+                      >
+                        Guardar
+                      </button>
+                      <button
+                        type="button"
+                        disabled={state === 'loading'}
+                        onClick={cancelEditing}
+                        className="rounded-md border border-gym-border px-3 py-1 text-xs text-white disabled:opacity-60"
+                      >
+                        Cancelar
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <>
+                    <p className="font-medium text-white">{entry.exerciseName}</p>
+                    <p className="text-gym-muted">
+                      {entry.weight} kg x {entry.reps} reps
+                    </p>
+                    <p className="text-xs text-gym-muted">
+                      {new Date(entry.date).toLocaleString()}
+                    </p>
+                    <div className="mt-2 flex flex-wrap gap-2">
+                      <button
+                        type="button"
+                        disabled={state === 'loading'}
+                        onClick={() => startEditing(entry)}
+                        className="rounded-md border border-gym-border px-3 py-1 text-xs text-white disabled:opacity-60"
+                      >
+                        Editar
+                      </button>
+                      <button
+                        type="button"
+                        disabled={state === 'loading'}
+                        onClick={() => {
+                          void handleDeleteEntry(entry.id)
+                        }}
+                        className="rounded-md border border-red-500/40 px-3 py-1 text-xs text-red-300 disabled:opacity-60"
+                      >
+                        Eliminar
+                      </button>
+                    </div>
+                  </>
+                )}
               </li>
             ))}
           </ul>

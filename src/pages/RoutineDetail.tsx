@@ -60,6 +60,7 @@ export default function RoutineDetail() {
   const [editingExerciseId, setEditingExerciseId] = useState<string | null>(null)
   const [catalogQuery, setCatalogQuery] = useState('')
   const [catalogResults, setCatalogResults] = useState<ExerciseCatalogItem[]>([])
+  const [isRoutineCollapsed, setIsRoutineCollapsed] = useState(false)
   const [catalogState, setCatalogState] = useState<'idle' | 'loading' | 'success' | 'error'>(
     'idle',
   )
@@ -383,18 +384,34 @@ export default function RoutineDetail() {
         </div>
       </form>
 
-      <section className="mt-6 space-y-3">
+      <section className="mt-6 rounded-lg border border-gym-border bg-gym-surface p-4">
+        <div className="flex items-center justify-between gap-3">
+          <h2 className="text-lg font-medium text-white">Ejercicios de la rutina</h2>
+          <button
+            type="button"
+            onClick={() => setIsRoutineCollapsed((prev) => !prev)}
+            className="rounded-md border border-gym-border px-3 py-1 text-xs text-white"
+          >
+            {isRoutineCollapsed ? 'Desplegar rutina' : 'Plegar rutina'}
+          </button>
+        </div>
+
         {routine.exercises.length === 0 ? (
-          <p className="rounded-lg border border-dashed border-gym-border p-4 text-sm text-gym-muted">
+          <p className="mt-3 rounded-lg border border-dashed border-gym-border p-4 text-sm text-gym-muted">
             Esta rutina aún no tiene ejercicios.
           </p>
+        ) : isRoutineCollapsed ? (
+          <p className="mt-3 text-sm text-gym-muted">
+            Rutina plegada ({routine.exercises.length} ejercicios).
+          </p>
         ) : (
-          routine.exercises.map((exercise) => (
-            <article
-              key={exercise.id}
-              className="rounded-lg border border-gym-border bg-gym-surface p-4"
-            >
-              <div className="flex items-start justify-between gap-3">
+          <div className="mt-3 space-y-3">
+            {routine.exercises.map((exercise) => (
+              <article
+                key={exercise.id}
+                className="rounded-lg border border-gym-border bg-gym-bg p-4"
+              >
+                <div className="flex items-start justify-between gap-3">
                 <div>
                   <h2 className="text-lg font-medium text-white">{exercise.name}</h2>
                   <p className="text-sm text-gym-muted">
@@ -421,9 +438,10 @@ export default function RoutineDetail() {
                     Eliminar
                   </button>
                 </div>
-              </div>
-            </article>
-          ))
+                </div>
+              </article>
+            ))}
+          </div>
         )}
       </section>
     </div>
