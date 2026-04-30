@@ -1,5 +1,5 @@
 import type { Request, Response } from 'express'
-import { searchExerciseCatalog } from '../services/exercises.service'
+import { searchExerciseCatalog } from '../services/exercises.service.js'
 
 function normalizeQueryParam(value: unknown): string {
   if (typeof value === 'string') return value

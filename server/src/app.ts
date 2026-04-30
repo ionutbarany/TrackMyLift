@@ -1,9 +1,9 @@
 import cors from 'cors'
 import express, { type NextFunction, type Request, type Response } from 'express'
-import exercisesRouter from './routes/exercises.routes'
-import progressRouter from './routes/progress.routes'
-import routinesRouter from './routes/routines.routes'
-import sessionsRouter from './routes/sessions.routes'
+import exercisesRouter from './routes/exercises.routes.js'
+import progressRouter from './routes/progress.routes.js'
+import routinesRouter from './routes/routines.routes.js'
+import sessionsRouter from './routes/sessions.routes.js'
 
 const app = express()
 

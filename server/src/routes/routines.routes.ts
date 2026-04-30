@@ -1,5 +1,5 @@
 import { Router } from 'express'
-import { getPopularRoutines } from '../controllers/routines.controller'
+import { getPopularRoutines } from '../controllers/routines.controller.js'
 
 const routinesRouter = Router()
 

@@ -2,7 +2,7 @@ import { Router } from 'express'
 import {
   getProgressByExercise,
   postProgressEntry,
-} from '../controllers/progress.controller'
+} from '../controllers/progress.controller.js'
 
 const progressRouter = Router()
 

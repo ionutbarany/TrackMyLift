@@ -5,7 +5,7 @@ import {
   createSession,
   listSessions,
   removeSessionById,
-} from '../services/sessions.service'
+} from '../services/sessions.service.js'
 
 function getParamAsString(param: string | string[] | undefined): string {
   if (Array.isArray(param)) {
