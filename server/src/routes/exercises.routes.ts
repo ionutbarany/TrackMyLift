@@ -1,5 +1,5 @@
 import { Router } from 'express'
-import { getExerciseSearch } from '../controllers/exercises.controller'
+import { getExerciseSearch } from '../controllers/exercises.controller.js'
 
 const exercisesRouter = Router()
 

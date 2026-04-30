@@ -1,4 +1,4 @@
-import type { Routine } from '../../../src/types'
+import type { Routine } from '../types.js'
 
 const popularRoutinesStore: Routine[] = [
   {

@@ -1,4 +1,4 @@
-import type { MuscleGroup } from '../../../src/types'
+import type { MuscleGroup } from '../types.js'
 
 const EXERCISE_API_BASE = 'https://exercisedb.p.rapidapi.com'
 const EXERCISE_LIMIT = 10

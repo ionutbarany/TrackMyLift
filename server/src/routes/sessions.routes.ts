@@ -5,7 +5,7 @@ import {
   patchSession,
   postSession,
   putSession,
-} from '../controllers/sessions.controller'
+} from '../controllers/sessions.controller.js'
 
 const sessionsRouter = Router()
 
