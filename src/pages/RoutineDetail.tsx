@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useState, type FormEvent } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { searchExercises, type ExerciseCatalogItem } from '../api/exerciseApi'
 import { useRoutines } from '../hooks/useRoutines'
@@ -55,8 +55,9 @@ function upsertRoutineExercise(
 
 export default function RoutineDetail() {
   const { id } = useParams()
-  const { routines, updateRoutine } = useRoutines()
+  const { routines, loading, errorMessage, updateRoutine } = useRoutines()
   const [form, setForm] = useState<ExerciseFormState>(initialExerciseForm)
+  const [routineActionError, setRoutineActionError] = useState<string | null>(null)
   const [editingExerciseId, setEditingExerciseId] = useState<string | null>(null)
   const [catalogQuery, setCatalogQuery] = useState('')
   const [catalogResults, setCatalogResults] = useState<ExerciseCatalogItem[]>([])
@@ -95,7 +96,7 @@ export default function RoutineDetail() {
     setEditingExerciseId(null)
   }
 
-  function handleSubmit(event: React.FormEvent<HTMLFormElement>): void {
+  async function handleSubmit(event: FormEvent<HTMLFormElement>): Promise<void> {
     event.preventDefault()
     if (!routine || !isFormValid) return
 
@@ -109,21 +110,35 @@ export default function RoutineDetail() {
       notes: form.notes.trim() || undefined,
     }
 
-    updateRoutine(upsertRoutineExercise(routine, nextExercise, editingExerciseId))
-    resetForm()
+    setRoutineActionError(null)
+    try {
+      await updateRoutine(upsertRoutineExercise(routine, nextExercise, editingExerciseId))
+      resetForm()
+    } catch (error) {
+      setRoutineActionError(
+        error instanceof Error ? error.message : 'No se pudo guardar el ejercicio',
+      )
+    }
   }
 
-  function handleDeleteExercise(exerciseId: string): void {
+  async function handleDeleteExercise(exerciseId: string): Promise<void> {
     if (!routine) return
 
     const nextRoutine: Routine = {
       ...routine,
       exercises: routine.exercises.filter((exercise) => exercise.id !== exerciseId),
     }
-    updateRoutine(nextRoutine)
+    setRoutineActionError(null)
+    try {
+      await updateRoutine(nextRoutine)
 
-    if (editingExerciseId === exerciseId) {
-      resetForm()
+      if (editingExerciseId === exerciseId) {
+        resetForm()
+      }
+    } catch (error) {
+      setRoutineActionError(
+        error instanceof Error ? error.message : 'No se pudo eliminar el ejercicio',
+      )
     }
   }
 
@@ -139,7 +154,7 @@ export default function RoutineDetail() {
     })
   }
 
-  async function handleCatalogSearch(event: React.FormEvent<HTMLFormElement>): Promise<void> {
+  async function handleCatalogSearch(event: FormEvent<HTMLFormElement>): Promise<void> {
     event.preventDefault()
 
     try {
@@ -166,6 +181,14 @@ export default function RoutineDetail() {
     }))
   }
 
+  if (loading && !routine) {
+    return (
+      <div className="p-4">
+        <p className="text-gym-muted">Cargando rutina…</p>
+      </div>
+    )
+  }
+
   if (!routine) {
     return (
       <div className="p-4">
@@ -189,6 +212,12 @@ export default function RoutineDetail() {
       <p className="mt-2 text-gym-muted">
         Gestiona ejercicios de la rutina ({routine.exercises.length}).
       </p>
+      {errorMessage ? (
+        <p className="mt-2 text-sm text-red-400">Error al cargar rutinas: {errorMessage}</p>
+      ) : null}
+      {routineActionError ? (
+        <p className="mt-2 text-sm text-red-400">{routineActionError}</p>
+      ) : null}
 
       <section className="mt-6 rounded-lg border border-gym-border bg-gym-surface p-4">
         <h2 className="text-lg font-medium text-white">Buscar en ExerciseDB</h2>
@@ -254,7 +283,7 @@ export default function RoutineDetail() {
 
       <form
         className="mt-6 space-y-4 rounded-lg border border-gym-border bg-gym-surface p-4"
-        onSubmit={handleSubmit}
+        onSubmit={(event) => void handleSubmit(event)}
       >
         <div>
           <label className="mb-1 block text-sm text-gym-muted" htmlFor="exercise-name">
@@ -432,7 +461,7 @@ export default function RoutineDetail() {
                   </button>
                   <button
                     type="button"
-                    onClick={() => handleDeleteExercise(exercise.id)}
+                    onClick={() => void handleDeleteExercise(exercise.id)}
                     className="rounded-md border border-red-500 px-3 py-1 text-xs text-red-400"
                   >
                     Eliminar
