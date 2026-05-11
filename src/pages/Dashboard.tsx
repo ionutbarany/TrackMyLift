@@ -48,7 +48,7 @@ function getTrainingStreak(sessions: Session[]): number {
 }
 
 export default function Dashboard() {
-  const { routines } = useRoutines()
+  const { routines, loading: routinesLoading } = useRoutines()
   const [sessions, setSessions] = useState<Session[]>([])
   const [state, setState] = useState<LoadingState>('loading')
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
@@ -121,7 +121,9 @@ export default function Dashboard() {
 
             <article className="rounded-lg border border-gym-border bg-gym-surface p-4">
               <p className="text-sm text-gym-muted">Rutinas guardadas</p>
-              <p className="mt-2 text-3xl font-semibold text-white">{routines.length}</p>
+              <p className="mt-2 text-3xl font-semibold text-white">
+                {routinesLoading ? '…' : routines.length}
+              </p>
             </article>
 
             <article className="rounded-lg border border-gym-border bg-gym-surface p-4">

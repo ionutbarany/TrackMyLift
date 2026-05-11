@@ -26,7 +26,7 @@ function buildExerciseCopyId(
 }
 
 export default function ExploreRoutines() {
-  const { routines: myRoutines, addRoutine } = useRoutines()
+  const { routines: myRoutines, loading: myRoutinesLoading, addRoutine } = useRoutines()
   const [routines, setRoutines] = useState<Routine[]>([])
   const [state, setState] = useState<LoadingState>('loading')
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
@@ -37,6 +37,7 @@ export default function ExploreRoutines() {
   const [exerciseState, setExerciseState] = useState<LoadingState>('idle')
   const [exerciseError, setExerciseError] = useState<string | null>(null)
   const [createRoutineMessage, setCreateRoutineMessage] = useState('')
+  const [routineError, setRoutineError] = useState<string | null>(null)
 
   useEffect(() => {
     const abortController = new AbortController()
@@ -66,7 +67,7 @@ export default function ExploreRoutines() {
     return myRoutines.some((item) => item.name.toLowerCase() === routine.name.toLowerCase())
   }
 
-  function saveRoutineToMyList(routine: Routine): void {
+  async function saveRoutineToMyList(routine: Routine): Promise<void> {
     if (hasRoutineInMyList(routine)) return
 
     const copiedRoutine: Routine = {
@@ -80,8 +81,15 @@ export default function ExploreRoutines() {
       })),
     }
 
-    addRoutine(copiedRoutine)
-    setSavedRoutineIds((prev) => [...prev, routine.id])
+    setRoutineError(null)
+    try {
+      await addRoutine(copiedRoutine)
+      setSavedRoutineIds((prev) => [...prev, routine.id])
+    } catch (error) {
+      setRoutineError(
+        error instanceof Error ? error.message : 'No se pudo guardar la rutina',
+      )
+    }
   }
 
   async function handleExerciseSearch(event: React.FormEvent<HTMLFormElement>): Promise<void> {
@@ -133,7 +141,7 @@ export default function ExploreRoutines() {
     }
   }
 
-  function createRoutineFromSelection(): void {
+  async function createRoutineFromSelection(): Promise<void> {
     if (selectedExercises.length === 0) return
 
     const routineId =
@@ -150,9 +158,16 @@ export default function ExploreRoutines() {
       exercises: selectedExercises.map((item) => buildExerciseFromCatalog(item)),
     }
 
-    addRoutine(newRoutine)
-    setSelectedExercises([])
-    setCreateRoutineMessage('Rutina guardada correctamente en Mis rutinas')
+    setRoutineError(null)
+    try {
+      await addRoutine(newRoutine)
+      setSelectedExercises([])
+      setCreateRoutineMessage('Rutina guardada correctamente en Mis rutinas')
+    } catch (error) {
+      setRoutineError(
+        error instanceof Error ? error.message : 'No se pudo crear la rutina',
+      )
+    }
   }
 
   return (
@@ -161,6 +176,10 @@ export default function ExploreRoutines() {
       <p className="mt-2 text-gym-muted">
         Descubre rutinas populares predefinidas para inspirarte.
       </p>
+      {myRoutinesLoading ? (
+        <p className="mt-2 text-xs text-gym-muted">Cargando tus rutinas…</p>
+      ) : null}
+      {routineError ? <p className="mt-2 text-sm text-red-400">{routineError}</p> : null}
 
       <section className="mt-4 rounded-lg border border-gym-border bg-gym-surface p-4">
         <h2 className="text-lg font-medium text-white">Buscar ejercicios</h2>
@@ -191,7 +210,7 @@ export default function ExploreRoutines() {
           <button
             type="button"
             disabled={selectedExercises.length === 0}
-            onClick={createRoutineFromSelection}
+            onClick={() => void createRoutineFromSelection()}
             className="rounded-md border border-gym-border px-4 py-2 text-sm text-white disabled:cursor-not-allowed disabled:opacity-60"
           >
             Crear rutina ({selectedExercises.length})
@@ -288,7 +307,7 @@ export default function ExploreRoutines() {
                   <button
                     type="button"
                     disabled={hasRoutineInMyList(routine) || savedRoutineIds.includes(routine.id)}
-                    onClick={() => saveRoutineToMyList(routine)}
+                    onClick={() => void saveRoutineToMyList(routine)}
                     className="rounded-md bg-gym-accent px-3 py-1 text-xs font-medium text-gym-bg disabled:cursor-not-allowed disabled:opacity-60"
                   >
                     {hasRoutineInMyList(routine) || savedRoutineIds.includes(routine.id)
