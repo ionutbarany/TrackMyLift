@@ -61,7 +61,13 @@ async function request<T>(path: string, options?: RequestInit): Promise<T> {
     throw new Error(payload?.message ?? 'Error de red con la API')
   }
 
-  return payload?.data as T
+  // Si la API no devolvió JSON válido (p.ej. HTML de Vite por mala configuración de VITE_API_URL),
+  // payload.data acabaría siendo `undefined` y el UI puede romperse al hacer .filter/.map/etc.
+  if (payload?.data === undefined) {
+    throw new Error(payload?.message ?? 'Respuesta del servidor no válida (data undefined)')
+  }
+
+  return payload.data
 }
 
 export function getApiBaseUrl(): string {
