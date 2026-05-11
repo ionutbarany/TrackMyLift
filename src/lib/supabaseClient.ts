@@ -24,7 +24,13 @@ export function getSupabaseClient(): SupabaseClient | null {
   const env = readEnv()
   if (!env) return null
   if (!client) {
-    client = createClient(env.url, env.anonKey)
+    client = createClient(env.url, env.anonKey, {
+      auth: {
+        persistSession: true,
+        autoRefreshToken: true,
+        detectSessionInUrl: true,
+      },
+    })
   }
   return client
 }
