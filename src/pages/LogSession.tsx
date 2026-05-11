@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useAuth } from '../hooks/useAuth'
 import { useSessionLog } from '../hooks/useSessionLog'
 import type { Session } from '../types'
 
@@ -17,6 +18,7 @@ function buildRoutineId(name: string): string {
 }
 
 export default function LogSession() {
+  const { loading: authLoading } = useAuth()
   const { sessions, logSession, getAllSessions, updateSession, deleteSession, state, errorMessage } =
     useSessionLog()
   const [routineName, setRoutineName] = useState('')
@@ -29,8 +31,11 @@ export default function LogSession() {
   const [editingNotes, setEditingNotes] = useState('')
 
   useEffect(() => {
+    if (authLoading) {
+      return
+    }
     void getAllSessions()
-  }, [getAllSessions])
+  }, [authLoading, getAllSessions])
 
   function toDatetimeLocalValue(isoString: string): string {
     const dateValue = new Date(isoString)

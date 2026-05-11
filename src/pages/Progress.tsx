@@ -1,8 +1,10 @@
 import { useEffect, useMemo, useState } from 'react'
+import { useAuth } from '../hooks/useAuth'
 import { useProgress } from '../hooks/useProgress'
 import type { ProgressEntry } from '../types'
 
 export default function Progress() {
+  const { loading: authLoading } = useAuth()
   const {
     entries,
     addEntry,
@@ -26,8 +28,11 @@ export default function Progress() {
   const [editingDate, setEditingDate] = useState('')
 
   useEffect(() => {
+    if (authLoading) {
+      return
+    }
     void getAllEntries()
-  }, [getAllEntries])
+  }, [authLoading, getAllEntries])
 
   const emptyStateMessage = useMemo(() => {
     if (state === 'loading') return 'Cargando historial...'

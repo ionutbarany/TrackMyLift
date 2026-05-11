@@ -1,8 +1,9 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo } from 'react'
 import { Link } from 'react-router-dom'
-import { fetchSessions } from '../api/client'
+import { useAuth } from '../hooks/useAuth'
 import { useRoutines } from '../hooks/useRoutines'
-import type { LoadingState, Session } from '../types'
+import { useSessionLog } from '../hooks/useSessionLog'
+import type { Session } from '../types'
 
 function getStartOfWeek(referenceDate: Date): Date {
   const result = new Date(referenceDate)
@@ -48,34 +49,16 @@ function getTrainingStreak(sessions: Session[]): number {
 }
 
 export default function Dashboard() {
+  const { loading: authLoading } = useAuth()
   const { routines, loading: routinesLoading } = useRoutines()
-  const [sessions, setSessions] = useState<Session[]>([])
-  const [state, setState] = useState<LoadingState>('loading')
-  const [errorMessage, setErrorMessage] = useState<string | null>(null)
+  const { sessions, getAllSessions, state, errorMessage } = useSessionLog()
 
   useEffect(() => {
-    const abortController = new AbortController()
-
-    fetchSessions()
-      .then((data) => {
-        if (abortController.signal.aborted) return
-        setSessions(data)
-        setState('success')
-      })
-      .catch((error: unknown) => {
-        if (abortController.signal.aborted) return
-        setState('error')
-        setErrorMessage(
-          error instanceof Error
-            ? error.message
-            : 'No se pudo cargar el resumen de sesiones',
-        )
-      })
-
-    return () => {
-      abortController.abort()
+    if (authLoading) {
+      return
     }
-  }, [])
+    void getAllSessions()
+  }, [authLoading, getAllSessions])
 
   const weekSessionCount = useMemo(() => {
     const startOfWeek = getStartOfWeek(new Date()).getTime()
@@ -99,7 +82,7 @@ export default function Dashboard() {
         Resumen rápido de tu semana para retomar el entrenamiento sin perder tiempo.
       </p>
 
-      {state === 'loading' ? (
+      {authLoading || state === 'loading' ? (
         <p className="mt-4 rounded-lg border border-gym-border bg-gym-surface p-4 text-sm text-gym-muted">
           Cargando resumen semanal...
         </p>
