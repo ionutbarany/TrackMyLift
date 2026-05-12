@@ -62,7 +62,7 @@ function mapExercise(item: ExerciseDbItem): ExerciseCatalogItem {
 export async function searchExerciseCatalog(
   query: string,
 ): Promise<{ data?: ExerciseCatalogItem[]; error?: string }> {
-  const rapidApiKey = process.env.RAPIDAPI_KEY
+  const rapidApiKey = process.env.RAPIDAPI_KEY?.trim()
   if (!rapidApiKey) {
     return { error: 'Falta RAPIDAPI_KEY en el entorno del servidor' }
   }
