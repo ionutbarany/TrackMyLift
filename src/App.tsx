@@ -1,5 +1,9 @@
 import { Navigate, Route, Routes } from 'react-router-dom'
 import NavBar from './components/NavBar'
+import ForgotPassword from './pages/auth/ForgotPassword'
+import Login from './pages/auth/Login'
+import Register from './pages/auth/Register'
+import UpdatePassword from './pages/auth/UpdatePassword'
 import Dashboard from './pages/Dashboard'
 import ExploreRoutines from './pages/ExploreRoutines'
 import LogSession from './pages/LogSession'
@@ -14,6 +18,10 @@ export default function App() {
       <NavBar />
       <main className="mx-auto w-full max-w-5xl flex-1 px-4 py-6">
         <Routes>
+          <Route path="/auth/login" element={<Login />} />
+          <Route path="/auth/register" element={<Register />} />
+          <Route path="/auth/forgot" element={<ForgotPassword />} />
+          <Route path="/auth/update-password" element={<UpdatePassword />} />
           <Route path="/" element={<Dashboard />} />
           <Route path="/routines" element={<MyRoutines />} />
           <Route path="/routines/:id" element={<RoutineDetail />} />

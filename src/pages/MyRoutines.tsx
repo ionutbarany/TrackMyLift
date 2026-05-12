@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useState, type FormEvent } from 'react'
 import { useRoutines } from '../hooks/useRoutines'
 import type { Routine } from '../types'
 
@@ -30,8 +30,10 @@ function buildRoutineId(): string {
 }
 
 export default function MyRoutines() {
-  const { routines, addRoutine, updateRoutine, deleteRoutine } = useRoutines()
+  const { routines, loading, errorMessage, addRoutine, updateRoutine, deleteRoutine } =
+    useRoutines()
   const [form, setForm] = useState<RoutineFormState>(initialFormState)
+  const [actionError, setActionError] = useState<string | null>(null)
   const [editingRoutineId, setEditingRoutineId] = useState<string | null>(null)
   const [expandedRoutineIds, setExpandedRoutineIds] = useState<string[]>([])
   const [exerciseEdits, setExerciseEdits] = useState<ExerciseEditState[]>([])
@@ -50,8 +52,9 @@ export default function MyRoutines() {
     setExerciseEdits([])
   }
 
-  function handleSubmit(event: React.FormEvent<HTMLFormElement>): void {
+  async function handleSubmit(event: FormEvent<HTMLFormElement>): Promise<void> {
     event.preventDefault()
+    setActionError(null)
     if (!isFormValid) return
 
     const commonData = {
@@ -60,42 +63,48 @@ export default function MyRoutines() {
       isPublic: form.isPublic,
     }
 
-    if (editingRoutineId) {
-      const existingRoutine = routines.find((routine) => routine.id === editingRoutineId)
-      if (!existingRoutine) return
+    try {
+      if (editingRoutineId) {
+        const existingRoutine = routines.find((routine) => routine.id === editingRoutineId)
+        if (!existingRoutine) return
 
-      const editsById = new Map(exerciseEdits.map((item) => [item.id, item]))
-      const nextExercises = existingRoutine.exercises.map((exercise) => {
-        const edit = editsById.get(exercise.id)
-        if (!edit) return exercise
+        const editsById = new Map(exerciseEdits.map((item) => [item.id, item]))
+        const nextExercises = existingRoutine.exercises.map((exercise) => {
+          const edit = editsById.get(exercise.id)
+          if (!edit) return exercise
 
-        const parsedSets = Number(edit.sets)
-        const parsedReps = Number(edit.reps)
+          const parsedSets = Number(edit.sets)
+          const parsedReps = Number(edit.reps)
 
-        return {
-          ...exercise,
-          sets: Number.isNaN(parsedSets) || parsedSets < 1 ? exercise.sets : parsedSets,
-          reps: Number.isNaN(parsedReps) || parsedReps < 1 ? exercise.reps : parsedReps,
-        }
-      })
+          return {
+            ...exercise,
+            sets: Number.isNaN(parsedSets) || parsedSets < 1 ? exercise.sets : parsedSets,
+            reps: Number.isNaN(parsedReps) || parsedReps < 1 ? exercise.reps : parsedReps,
+          }
+        })
 
-      updateRoutine({
-        ...existingRoutine,
+        await updateRoutine({
+          ...existingRoutine,
+          ...commonData,
+          exercises: nextExercises,
+        })
+        resetForm()
+        return
+      }
+
+      const newRoutine: Routine = {
+        id: buildRoutineId(),
+        createdAt: new Date().toISOString(),
         ...commonData,
-        exercises: nextExercises,
-      })
+        exercises: [],
+      }
+      await addRoutine(newRoutine)
       resetForm()
-      return
+    } catch (error) {
+      setActionError(
+        error instanceof Error ? error.message : 'No se pudo guardar la rutina',
+      )
     }
-
-    const newRoutine: Routine = {
-      id: buildRoutineId(),
-      createdAt: new Date().toISOString(),
-      ...commonData,
-      exercises: [],
-    }
-    addRoutine(newRoutine)
-    resetForm()
   }
 
   function toggleRoutineExpansion(routineId: string): void {
@@ -123,11 +132,18 @@ export default function MyRoutines() {
     )
   }
 
-  function handleDelete(routineId: string): void {
-    deleteRoutine(routineId)
-    setExpandedRoutineIds((prev) => prev.filter((id) => id !== routineId))
-    if (editingRoutineId === routineId) {
-      resetForm()
+  async function handleDelete(routineId: string): Promise<void> {
+    setActionError(null)
+    try {
+      await deleteRoutine(routineId)
+      setExpandedRoutineIds((prev) => prev.filter((id) => id !== routineId))
+      if (editingRoutineId === routineId) {
+        resetForm()
+      }
+    } catch (error) {
+      setActionError(
+        error instanceof Error ? error.message : 'No se pudo eliminar la rutina',
+      )
     }
   }
 
@@ -143,16 +159,23 @@ export default function MyRoutines() {
     )
   }
 
-  function handleRemoveExercise(exerciseId: string): void {
+  async function handleRemoveExercise(exerciseId: string): Promise<void> {
     if (!editingRoutineId) return
     const routine = routines.find((item) => item.id === editingRoutineId)
     if (!routine) return
 
-    updateRoutine({
-      ...routine,
-      exercises: routine.exercises.filter((exercise) => exercise.id !== exerciseId),
-    })
-    setExerciseEdits((prev) => prev.filter((exercise) => exercise.id !== exerciseId))
+    setActionError(null)
+    try {
+      await updateRoutine({
+        ...routine,
+        exercises: routine.exercises.filter((exercise) => exercise.id !== exerciseId),
+      })
+      setExerciseEdits((prev) => prev.filter((exercise) => exercise.id !== exerciseId))
+    } catch (error) {
+      setActionError(
+        error instanceof Error ? error.message : 'No se pudo actualizar la rutina',
+      )
+    }
   }
 
   return (
@@ -160,9 +183,19 @@ export default function MyRoutines() {
       <h1 className="text-2xl font-semibold text-white">Mis rutinas</h1>
       <p className="mt-2 text-gym-muted">Crea, edita y elimina tus rutinas personales.</p>
 
+      {loading ? (
+        <p className="mt-4 text-sm text-gym-muted">Cargando rutinas…</p>
+      ) : null}
+      {errorMessage ? (
+        <p className="mt-2 text-sm text-red-400">No se pudieron cargar las rutinas: {errorMessage}</p>
+      ) : null}
+      {actionError ? (
+        <p className="mt-2 text-sm text-red-400">{actionError}</p>
+      ) : null}
+
       <form
         className="mt-6 space-y-4 rounded-lg border border-gym-border bg-gym-surface p-4"
-        onSubmit={handleSubmit}
+        onSubmit={(event) => void handleSubmit(event)}
       >
         <div>
           <label className="mb-1 block text-sm text-gym-muted" htmlFor="routine-name">
@@ -263,7 +296,7 @@ export default function MyRoutines() {
                   </div>
                   <button
                     type="button"
-                    onClick={() => handleRemoveExercise(exercise.id)}
+                    onClick={() => void handleRemoveExercise(exercise.id)}
                     className="mt-2 rounded-md border border-red-500 px-3 py-1 text-xs text-red-400"
                   >
                     Eliminar ejercicio
@@ -317,7 +350,7 @@ export default function MyRoutines() {
                   </button>
                   <button
                     type="button"
-                    onClick={() => handleDelete(routine.id)}
+                    onClick={() => void handleDelete(routine.id)}
                     className="rounded-md border border-red-500 px-3 py-1 text-xs text-red-400"
                   >
                     Eliminar

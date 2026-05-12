@@ -1,8 +1,24 @@
 import { useEffect, useState } from 'react'
+import { useAuth } from '../hooks/useAuth'
 import { useSessionLog } from '../hooks/useSessionLog'
 import type { Session } from '../types'
 
+function buildRoutineId(name: string): string {
+  const normalized = name.trim().toLowerCase()
+  const slug = normalized
+    .replace(/[^a-z0-9\s-]/g, '')
+    .replace(/\s+/g, '-')
+    .replace(/-+/g, '-')
+    .replace(/^-|-$/g, '')
+  if (slug) return slug
+  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+    return `routine-${crypto.randomUUID()}`
+  }
+  return `routine-${Math.random().toString(36).slice(2, 11)}`
+}
+
 export default function LogSession() {
+  const { loading: authLoading } = useAuth()
   const { sessions, logSession, getAllSessions, updateSession, deleteSession, state, errorMessage } =
     useSessionLog()
   const [routineName, setRoutineName] = useState('')
@@ -15,18 +31,11 @@ export default function LogSession() {
   const [editingNotes, setEditingNotes] = useState('')
 
   useEffect(() => {
+    if (authLoading) {
+      return
+    }
     void getAllSessions()
-  }, [getAllSessions])
-
-  function buildRoutineId(name: string): string {
-    const normalized = name.trim().toLowerCase()
-    const slug = normalized
-      .replace(/[^a-z0-9\s-]/g, '')
-      .replace(/\s+/g, '-')
-      .replace(/-+/g, '-')
-      .replace(/^-|-$/g, '')
-    return slug || `routine-${Date.now()}`
-  }
+  }, [authLoading, getAllSessions])
 
   function toDatetimeLocalValue(isoString: string): string {
     const dateValue = new Date(isoString)
